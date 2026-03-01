@@ -140,23 +140,54 @@ int main(void){
     char time_str[16];
     for(int s=0;s<SLOTS_PER_DAY;s++){
         slot_to_text(s,time_str);
-        fprintf(out,"%s",time_str);
 
-        for(int d=0;d<DAYS;d++){
-            fprintf(out,",");
-            int first=1;
-            for(int i=0;i<song_count;i++){
-                if(songs[i].assigned_slot == s + d*SLOTS_PER_DAY){
-                    if(!first) fprintf(out,"、");
-                    fprintf(out,"%s",songs[i].song);
-                    first=0;
+        // 建立 Buffer 收集該時段每一天的所有歌曲指標
+        int day_song_counts[DAYS] = {0};
+        int max_rows = 1; // 至少保留一個 Row 輸出時段字串
+        const char* daily_songs[DAYS][SLOT_CAPACITY];
+
+        // 初始化 Buffer
+        for(int d=0;d<DAYS;d++) {
+            for(int c=0;c<SLOT_CAPACITY;c++) {
+                daily_songs[d][c] = "";
+            }
+        }
+
+        // 掃描並填裝歌曲至對應的 Day 與 Slot
+        for(int i=0;i<song_count;i++){
+            for(int d=0;d<DAYS;d++){
+                if(songs[i].assigned_slot == s + d*SLOTS_PER_DAY && day_song_counts[d] < SLOT_CAPACITY){
+                    daily_songs[d][day_song_counts[d]++] = songs[i].song;
                 }
             }
         }
-        fprintf(out,"\n");
+
+        // 判斷該時段需要展開成幾個 Row
+        for(int d=0;d<DAYS;d++){
+            if(day_song_counts[d] > max_rows) {
+                max_rows = day_song_counts[d];
+            }
+        }
+
+        // 垂直輸出該時段的資料
+        for(int r=0; r<max_rows; r++){
+            // 只有第一個 Row 顯示時段，後續 Row 的時段欄位留白
+            if(r == 0) {
+                fprintf(out,"%s",time_str);
+            } else {
+                fprintf(out,""); 
+            }
+
+            for(int d=0;d<DAYS;d++){
+                fprintf(out,",%s", daily_songs[d][r]);
+            }
+            fprintf(out,"\n");
+        }
     }
 
     // 輸出未排入歌曲
+    // 註：未排入歌曲數量不可預測，若也需轉為單獨的 Row，需套用類似的迭代邏輯。
+    // 這裡暫時維持在同一格內，以符合主要排程區域的整潔。
     fprintf(out,"無法排入,");
     int first=1;
     for(int i=0;i<song_count;i++){
@@ -169,6 +200,6 @@ int main(void){
     fprintf(out,"\n");
 
     fclose(out);
-    printf("✅ 排程完成，輸出 result.csv\n");
+    printf("Schedule computation complete. Output directed to result.csv\n");
     return 0;
 }
