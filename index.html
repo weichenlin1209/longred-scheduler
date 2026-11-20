@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f0e8">
+    <title>驗歌排程器</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="scheduler.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div class="brand-mark" aria-hidden="true">LR</div>
+        <div class="eyebrow">LONGRED · REHEARSAL TOOL</div>
+        <h1>長虹吉他社，<em>排歌神器</em></h1>
+        <p class="intro">匯入表單回覆，快速安排驗歌時段。檔案只會在你的瀏覽器裡處理，不會上傳。</p>
+      </header>
+
+      <section class="workspace" aria-labelledby="setup-title">
+        <div class="section-heading">
+          <span class="step">01</span>
+          <div>
+            <h2 id="setup-title">準備排程</h2>
+            <p>使用 Google 表單回覆匯出的 CSV 檔案</p>
+          </div>
+        </div>
+
+        <label class="dropzone" id="dropzone" for="csv-file">
+          <span class="upload-icon" aria-hidden="true">↑</span>
+          <span class="drop-title" id="file-label">選擇或拖曳 CSV 檔案到這裡</span>
+          <span class="drop-hint">僅支援 .csv · 資料不會離開你的裝置</span>
+          <input id="csv-file" type="file" accept=".csv,text/csv" aria-describedby="file-status">
+        </label>
+        <p class="file-status" id="file-status" aria-live="polite">尚未選擇檔案</p>
+
+        <div id="venue-fields" class="venue-fields" aria-live="polite"></div>
+        <button class="primary-button" id="schedule-button" type="button" disabled>產生排程 <span aria-hidden="true">↗</span></button>
+        <p class="error-message" id="error-message" role="alert" hidden></p>
+      </section>
+
+      <section class="results" id="results" aria-labelledby="results-title" hidden>
+        <div class="results-top">
+          <div class="section-heading">
+            <span class="step">02</span>
+            <div>
+              <h2 id="results-title">排程結果</h2>
+              <p id="results-summary"></p>
+            </div>
+          </div>
+          <button class="download-button" id="download-button" type="button">下載 CSV <span aria-hidden="true">↓</span></button>
+        </div>
+        <p class="schedule-notice" id="schedule-notice" role="status" aria-live="polite" hidden></p>
+        <div class="table-wrap" id="schedule-table"></div>
+        <div class="unassigned" id="unassigned" hidden></div>
+      </section>
+
+      <footer>LONGRED SCHEDULER <span>·</span> YOUR DATA STAYS LOCAL</footer>
+    </main>
+  </body>
+</html>
