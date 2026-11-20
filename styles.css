@@ -49,6 +49,7 @@ h2 { margin: 2px 0 5px; font-size: 21px; letter-spacing: -.03em; }
 .primary-button span { color: var(--lime); font-size: 18px; }
 .error-message { margin: 12px 0 0 51px; color: #a13b2b; font-size: 13px; }
 .results-top { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.export-actions { display: flex; flex-wrap: wrap; gap: 9px; }
 .download-button { padding: 12px 15px; color: var(--ink); border: 1px solid var(--ink); background: transparent; white-space: nowrap; }
 .download-button:hover { color: white; background: var(--ink); }
 .download-button span { margin-left: 12px; }
@@ -94,5 +95,5 @@ footer span { margin: 0 7px; color: var(--green); }
   .form-row input { width: 100%; }
   .primary-button { width: 100%; }
   .results-top { align-items: flex-start; flex-direction: column; }
-  .download-button { align-self: flex-end; }
+  .export-actions { align-self: flex-end; }
 }

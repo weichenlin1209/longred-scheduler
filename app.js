@@ -6,6 +6,7 @@
   const venueFields = document.querySelector('#venue-fields');
   const scheduleButton = document.querySelector('#schedule-button');
   const downloadButton = document.querySelector('#download-button');
+  const downloadImageButton = document.querySelector('#download-image-button');
   const errorMessage = document.querySelector('#error-message');
   const results = document.querySelector('#results');
   const resultsSummary = document.querySelector('#results-summary');
@@ -153,6 +154,132 @@
     link.download = 'result.csv';
     link.click();
     URL.revokeObjectURL(url);
+  });
+
+  function truncateText(context, text, maxWidth) {
+    if (context.measureText(text).width <= maxWidth) return text;
+    let shortened = text;
+    while (shortened && context.measureText(`${shortened}…`).width > maxWidth) shortened = shortened.slice(0, -1);
+    return `${shortened}…`;
+  }
+
+  function drawScheduleImage(result) {
+    const scale = 2;
+    const padding = 36;
+    const timeWidth = 150;
+    const dayWidth = Math.max(340, Math.min(460, 920 / result.days.length));
+    const width = padding * 2 + timeWidth + dayWidth * result.days.length;
+    const titleHeight = 112;
+    const headerHeight = 68;
+    const rowHeight = 48;
+    const tableHeight = headerHeight + result.scheduleRows.length * 3 * rowHeight;
+    const height = titleHeight + tableHeight + padding;
+    const canvas = document.createElement('canvas');
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const context = canvas.getContext('2d');
+    context.scale(scale, scale);
+    context.fillStyle = '#f4f0e8';
+    context.fillRect(0, 0, width, height);
+
+    context.fillStyle = '#345c45';
+    context.font = '500 10px "DM Mono", "Noto Sans TC", sans-serif';
+    context.fillText('LONGRED  ·  REHEARSAL TOOL', padding, 27);
+    context.fillStyle = '#252a24';
+    context.font = '700 27px "DM Sans", "Noto Sans TC", sans-serif';
+    context.fillText('驗歌順序', padding, 66);
+    context.fillStyle = '#77786d';
+    context.font = '12px "DM Sans", "Noto Sans TC", sans-serif';
+    context.fillText(`${result.days.map((day) => day.label).join('、')}  ·  共 ${result.songCount} 首歌`, padding, 90);
+
+    const tableX = padding;
+    const tableY = titleHeight;
+    const tableWidth = timeWidth + dayWidth * result.days.length;
+    context.fillStyle = '#eeeee5';
+    context.fillRect(tableX, tableY, tableWidth, headerHeight);
+    context.strokeStyle = '#d9d4c8';
+    context.lineWidth = 1;
+    context.strokeRect(tableX, tableY, tableWidth, tableHeight);
+    context.font = '700 13px "DM Sans", "Noto Sans TC", sans-serif';
+    context.fillStyle = '#345c45';
+    context.textBaseline = 'middle';
+    context.fillText('時段', tableX + 15, tableY + headerHeight / 2);
+    result.days.forEach((day, index) => {
+      const x = tableX + timeWidth + index * dayWidth;
+      context.beginPath();
+      context.moveTo(x, tableY);
+      context.lineTo(x, tableY + tableHeight);
+      context.stroke();
+      context.fillText(truncateText(context, LongredScheduler.formatDayHeader(day), dayWidth - 28), x + 15, tableY + headerHeight / 2);
+    });
+    context.beginPath();
+    context.moveTo(tableX + timeWidth, tableY);
+    context.lineTo(tableX + timeWidth, tableY + tableHeight);
+    context.stroke();
+    context.beginPath();
+    context.moveTo(tableX, tableY + headerHeight);
+    context.lineTo(tableX + tableWidth, tableY + headerHeight);
+    context.stroke();
+
+    result.scheduleRows.forEach((row, slot) => {
+      const slotY = tableY + headerHeight + slot * 3 * rowHeight;
+      context.fillStyle = slot % 2 === 0 ? '#f1f0e8' : '#eae8df';
+      context.fillRect(tableX, slotY, timeWidth, 3 * rowHeight);
+      context.fillStyle = '#252a24';
+      context.font = '600 12px "DM Mono", "Noto Sans TC", sans-serif';
+      context.fillText(row.time, tableX + 15, slotY + 1.5 * rowHeight);
+
+      for (let position = 0; position < 3; position += 1) {
+        const y = slotY + position * rowHeight;
+        if (position > 0) {
+          context.strokeStyle = '#e6e2d8';
+          context.lineWidth = 1;
+          context.beginPath();
+          context.moveTo(tableX + timeWidth, y);
+          context.lineTo(tableX + tableWidth, y);
+          context.stroke();
+        }
+        row.songsByDay.forEach((positions, dayIndex) => {
+          const song = positions[position];
+          if (!song) return;
+          const x = tableX + timeWidth + dayIndex * dayWidth;
+          const eligible = song.availability.has(dayIndex * 6 + slot);
+          context.fillStyle = eligible ? '#eef1e8' : '#f3e3d2';
+          context.fillRect(x + 10, y + 7, dayWidth - 20, 34);
+          context.fillStyle = '#252a24';
+          context.font = '13px "DM Sans", "Noto Sans TC", sans-serif';
+          context.fillText(truncateText(context, song.name, dayWidth - 42), x + 20, y + rowHeight / 2);
+        });
+      }
+      context.strokeStyle = '#d9d4c8';
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(tableX, slotY + 3 * rowHeight);
+      context.lineTo(tableX + tableWidth, slotY + 3 * rowHeight);
+      context.stroke();
+    });
+
+    return canvas;
+  }
+
+  downloadImageButton.addEventListener('click', async () => {
+    if (!currentResult) return;
+    await document.fonts.ready;
+    const canvas = drawScheduleImage(currentResult);
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        scheduleNotice.hidden = false;
+        scheduleNotice.className = 'schedule-notice is-warning';
+        scheduleNotice.textContent = '無法產生 PNG 圖片，請重試。';
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = element('a');
+      link.href = url;
+      link.download = 'schedule.png';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, 'image/png');
   });
 
   results.addEventListener('dragstart', (event) => {
