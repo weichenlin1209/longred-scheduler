@@ -89,7 +89,7 @@
 
   function findDayColumns(headers) {
     return headers.map((header, index) => ({ header, index }))
-      .filter(({ header }) => /總驗時間|可參加時間|可配合時間|可驗時間/.test(header));
+      .filter(({ header }) => /一驗時間|二驗時間|總驗時間|可參加時間|可配合時間|可驗時間/.test(header));
   }
 
   function getDayLabels(text) {
@@ -101,9 +101,7 @@
   }
 
   function formatDayHeader(day) {
-    if (!day.venue) return day.label;
-    const weekday = day.label.match(/^(.*)（([^（）]+)）$/);
-    return weekday ? `${weekday[1]}（${weekday[2]}、${day.venue}）` : `${day.label}（${day.venue}）`;
+    return day.venue ? `${day.label}${day.venue}` : day.label;
   }
 
   function createSchedule(text, venues) {

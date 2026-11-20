@@ -38,7 +38,7 @@
         input.type = 'text';
         input.id = `venue-${index}`;
         input.maxLength = 100;
-        input.placeholder = '例如：社辦 / 音樂教室';
+        input.placeholder = '例如：F12 / 練團室B';
         label.htmlFor = input.id;
         row.append(label, input);
         return row;
